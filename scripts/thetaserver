@@ -1,0 +1,16 @@
+#!/bin/bash
+nmcli --nocheck --ask c up FabienHotspot
+
+
+echo waiting for request
+while :
+do
+	LASTREQUEST=`curl http://fabien.benetou.fr/pub/home/Theta/RequestImage/Request.txt`
+	NOW=`date +"%s"`
+	echo $NOW now
+	echo $LASTREQUEST last request
+	(( ($NOW*1000 - 10000 ) < $LASTREQUEST )) && ./thetacontrol
+	sleep 2
+done
+
+

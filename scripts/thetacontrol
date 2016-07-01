@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo Connecting to theta
+nmcli --nocheck --ask c up THETAXS00156948.OSC #connect
+sleep 5
+SESSION=`curl 192.168.1.1/osc/state -d "" | sed 's/.*sessionId":"\(.*\)","batteryLevel.*/\1\n/' # grab current session`
+echo found session $SESSION
+test $SESSION = "SID_0000" && curl 192.168.1.1/osc/commands/execute -d '{ "name": "camera.startSession", "parameters": {} }' # start session
+SESSION=`curl 192.168.1.1/osc/state -d "" | sed 's/.*sessionId":"\(.*\)","batteryLevel.*/\1\n/' # grab current session`
+curl 192.168.1.1/osc/commands/execute -d '{ "name": "camera.takePicture", "parameters": { "sessionId": "'$SESSION'" } }' # take photo
+echo taking photo
+sleep 5
+LASTIMAGE=`curl 192.168.1.1/osc/state -d '' | sed 's/.*FileUri":"\(.*\)","_batteryState.*/\1\n/' # grab last file`
+echo downloading image $LASTIMAGE
+wget 192.168.1.1/$LASTIMAGE -O LastImage.jpg # grab that last image
+echo connection to the net
+nmcli --nocheck --ask c up FabienHotspot
+echo sending file
+sleep 5
+scp LastImage.jpg shell:~/web/Theta/
+echo file sent, refresh http://fabien.benetou.fr/pub/home/Theta/
